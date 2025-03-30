@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AR.js Video Trigger</title>
+  <!-- Load AR.js & A-Frame -->
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+  <!-- AR.js Scene -->
+  <a-scene
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true"
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+  >
+
+    <!-- Image Target (NFT) -->
+    <a-nft
+      type="nft"
+      url="reflection"  <!-- Path to your .patt file (without extension) -->
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+    >
+      <!-- Video (Plays when image is detected) -->
+      <a-video
+        src="us.mp4"  <!-- Replace with your video URL -->
+        width="2" height="1.125"
+        position="0 0 0"
+        rotation="-90 0 0"
+        visible="false"
+        id="video"
+      ></a-video>
+    </a-nft>
+
+    <!-- Camera -->
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // Play video when target is found
+    const video = document.getElementById("video");
+    const scene = document.querySelector("a-scene");
+
+    scene.addEventListener("markerFound", (e) => {
+      video.setAttribute("visible", "true");
+      video.components.material.material.map.image.play();
+    });
+
+    // Pause video when target is lost
+    scene.addEventListener("markerLost", (e) => {
+      video.setAttribute("visible", "false");
+      video.components.material.material.map.image.pause();
+    });
+  </script>
+</body>
+</html>
