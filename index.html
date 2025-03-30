@@ -2,25 +2,70 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>WebAR Fixed</title>
+  <title>Reflection of Us - WebAR</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    #startButton {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #FF6B6B;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+    #arScene {
+      display: none; /* Hide AR scene until permission is granted */
+    }
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 18px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
+  <!-- Start Button (Shows First) -->
+  <button id="startButton">TAP TO START AR</button>
+  <div id="loading">Loading AR... (Allow Camera Access)</div>
+
+  <!-- AR Scene (Hidden Initially) -->
   <a-scene 
+    id="arScene"
     vr-mode-ui="enabled: false"
-    arjs="debugUIEnabled: true; trackingMethod: best;"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    renderer="logarithmicDepthBuffer: true;"
   >
     <a-nft 
       type="nft" 
-      url="reflection"  <!-- Replace with your .patt filename -->
+      url="reflection"  <!-- Your .patt file (no extension) -->
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
     >
       <a-video
-        src="us.mp4"
-        width="2"
-        height="1"
-        position="0 0 -1"
-        rotation="-90 0 0"
+        src="us.mp4"  <!-- Your video file -->
+        width="4"
+        height="2"
+        position="0 0 -2"
+        rotation="0 0 0"
         autoplay
         playsinline
         muted
@@ -31,15 +76,42 @@
   </a-scene>
 
   <script>
+    const startButton = document.getElementById("startButton");
+    const loadingText = document.getElementById("loading");
+    const arScene = document.getElementById("arScene");
     const video = document.querySelector("a-video");
-    const scene = document.querySelector("a-scene");
 
-    scene.addEventListener("markerFound", () => {
-      video.setAttribute("visible", "true");
-    });
+    // 1. When user clicks the button, request camera access
+    startButton.addEventListener("click", async () => {
+      startButton.style.display = "none";
+      loadingText.style.display = "block";
 
-    scene.addEventListener("markerLost", () => {
-      video.setAttribute("visible", "false");
+      try {
+        // Request camera permission
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        // Hide loading text and show AR scene
+        loadingText.style.display = "none";
+        arScene.style.display = "block";
+        
+        // Play video when marker is found
+        arScene.addEventListener("markerFound", () => {
+          video.setAttribute("visible", "true");
+        });
+        
+        // Pause video when marker is lost
+        arScene.addEventListener("markerLost", () => {
+          video.setAttribute("visible", "false");
+        });
+
+        // Close the stream (AR.js will handle the camera)
+        stream.getTracks().forEach(track => track.stop());
+      } catch (error) {
+        loadingText.style.display = "none";
+        startButton.style.display = "block";
+        alert("Error: Could not access camera. Please allow permissions.");
+        console.error("Camera error:", error);
+      }
     });
   </script>
 </body>
